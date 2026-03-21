@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import fitz  # PyMuPDF
 
-base_path = "C:\\Users\\4mine\\Desktop\\FilesML"
+base_path = "C:\\Users\\.\\Desktop\\FilesML"
 
 data = []
 

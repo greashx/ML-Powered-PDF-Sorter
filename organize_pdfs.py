@@ -49,9 +49,9 @@ def get_pdf_features(filepath):
             'word_count': word_count,
             'digit_ratio': sum(c.isdigit() for c in fname) / len(fname) if len(fname) > 0 else 0,
             'page_count': page_count,
-            'has_keyword': int(any(k in fname.lower() for k in ['report', 'final', 'draft'])),
-            'is_personal': int(any(k in fname.lower() for k in ['cv', 'resume', 'tax', 'passport'])),
-            'special_char_count': sum(not c.isalnum() and c not in [' ', '.', '_'] for c in fname),
+            'has_keyword': int(any(k in fname.lower() for k in ['week', 'lec', 'slide', 'ch', 'assgn', 'prob', 'sol', 'ex', 'mock', 'homework', 'hw', 'exercise'])),
+            'is_personal': int(any(k in fname.lower() for k in ['personal', 'private', 'id', 'passport', 'original', 'pass', 'visa', 'card', 'invoice' ])),
+            'special_char_count': int(any(k in fname.lower() for k in ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "+", "=", "{", "}", "[", "]", "|", ";", ":", "'", '"'])),
             'is_large': 1 if size_mb > 3.5 else 0
         }
 
@@ -90,37 +90,50 @@ def run_cleanup():
         pd.DataFrame(columns=['Timestamp', 'File', 'Category', 'Status']).to_csv(LOG_FILE, index=False)
 
     files_processed = 0
+    CONFIDENCE_THRESHOLD = 0.70  # You can adjust this (0.0 to 1.0)
 
     for filename in os.listdir(SOURCE_DIR):
         if filename.lower().endswith(".pdf"):
             file_path = os.path.join(SOURCE_DIR, filename)
 
-            # Feature Extraction
+            # 1. Feature Extraction
             X_new = get_pdf_features(file_path)
             if X_new is None: continue
 
-            # Prediction
-            pred_encoded = model.predict(X_new)
-            category = le.inverse_transform(pred_encoded)[0]
+            # 2. Prediction with Probabilities
+            # predict_proba returns a list of probabilities for each category
+            probs = model.predict_proba(X_new)[0]
+            max_prob = max(probs)
 
-            # File Movement
+            # 3. Decision Logic
+            if max_prob >= CONFIDENCE_THRESHOLD:
+                # Trust the model
+                pred_encoded = model.predict(X_new)
+                category = le.inverse_transform(pred_encoded)[0]
+                status = "Moved"
+            else:
+                # Model is unsure (e.g., only 40% sure)
+                category = "To_Review"
+                status = f"Low Confidence ({max_prob:.2f})"
+
+            # 4. File Movement
             dest_folder = os.path.join(SOURCE_DIR, category)
             os.makedirs(dest_folder, exist_ok=True)
 
             try:
                 shutil.move(file_path, os.path.join(dest_folder, filename))
-                status = "Moved"
-                print(f"✅ [{category}] {filename}")
+                icon = "✅" if category != "To_Review" else "⚠️"
+                print(f"{icon} [{category}] {filename} (Conf: {max_prob:.2f})")
             except Exception as e:
                 status = f"Error: {e}"
                 print(f"❌ Failed to move {filename}")
 
-            # Breadcrumb Logging
+            # 5. Breadcrumb Logging
             log_data = pd.DataFrame([[datetime.now().strftime("%Y-%m-%d %H:%M:%S"), filename, category, status]])
             log_data.to_csv(LOG_FILE, mode='a', header=False, index=False)
             files_processed += 1
 
-    print(f"\nDone! Processed {files_processed} files. Check {LOG_FILE} for details.")
+    print(f"\nDone! Processed {files_processed} files.")
 
 
 if __name__ == "__main__":

@@ -8,12 +8,12 @@ from datetime import datetime
 # ==========================================
 # 1. CONFIGURATION
 # ==========================================
-SOURCE_DIR = "C:\\Users\\.\\Downloads"  # Change this to your actual path
-MODEL_PATH = "file_classifier_model.pkl"
-ENCODER_PATH = "label_encoder.pkl"
+SOURCE_DIR = "C:\\Users\\4mine\\Downloads"  # Change this to your actual path
+MODEL_PATH = "file_classifier_model.pkl" # Path to the trained model
+ENCODER_PATH = "label_encoder.pkl" # Path to the label encoder
 LOG_FILE = os.path.join(SOURCE_DIR, "classification_log.csv")
 
-# Load the model
+# Load the model and label encoder
 model = joblib.load(MODEL_PATH)
 le = joblib.load(ENCODER_PATH)
 
@@ -27,15 +27,20 @@ def get_pdf_features(filepath):
         stats = os.stat(filepath)
         fname = os.path.basename(filepath)
 
+
+
         # Open PDF to get page and word counts
         doc = fitz.open(filepath)
         page_count = len(doc)
+        """
         # Extract text from first 3 pages to estimate word count
         text = ""
         for page in doc[:3]:
             text += page.get_text()
         word_count = len(text.split())
         doc.close()
+        """
+
 
         size_mb = stats.st_size / (1024 * 1024)
 
@@ -46,7 +51,7 @@ def get_pdf_features(filepath):
             'name_length': len(fname),
             'num_spaces': fname.count(' '),
             'num_underscores': fname.count('_'),
-            'word_count': word_count,
+            "word_count": len(fname.replace('_', ' ').split()),
             'digit_ratio': sum(c.isdigit() for c in fname) / len(fname) if len(fname) > 0 else 0,
             'page_count': page_count,
             'has_keyword': int(any(k in fname.lower() for k in ['week', 'lec', 'slide', 'ch', 'assgn', 'prob', 'sol', 'ex', 'mock', 'homework', 'hw', 'exercise'])),
@@ -57,7 +62,7 @@ def get_pdf_features(filepath):
 
         # Ensure columns are in the EXACT order the model expects
         feature_order = [
-            'size',
+        'size',
         'name_length',
         'has_numbers',
         'num_spaces',
@@ -70,7 +75,6 @@ def get_pdf_features(filepath):
         'special_char_count',
         'page_count'
         ]
-        # Note: 'is_large' was likely the 12th feature in your set.
         # We return a DataFrame with one row.
         return pd.DataFrame([features])[feature_order]
 
@@ -112,13 +116,14 @@ def run_cleanup():
                 category = le.inverse_transform(pred_encoded)[0]
                 status = "Moved"
             else:
-                # Model is unsure (e.g., only 40% sure)
+                # Model is unsure (e.g., only 30% sure)
                 category = "To_Review"
                 status = f"Low Confidence ({max_prob:.2f})"
 
             # 4. File Movement
             dest_folder = os.path.join(SOURCE_DIR, category)
             os.makedirs(dest_folder, exist_ok=True)
+
 
             try:
                 shutil.move(file_path, os.path.join(dest_folder, filename))

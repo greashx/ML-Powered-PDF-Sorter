@@ -1,6 +1,6 @@
 @echo off
 :: Navigate to your project directory
-cd /d "C:\Users\4mine\PycharmProjects\FileML"
+cd /d "C:\Users\<Username>\<ProjectDirectory>\<ProjectName>"
 
 :: Run the script using the Python executable INSIDE the virtual environment
 :: This handles the 'activation' automatically in one line

@@ -3,7 +3,7 @@ import pandas as pd
 import fitz  # PyMuPDF
 
 # Define the base path to your PDF files
-base_path = "C:\\Users\\4mine\\Desktop\\FilesML"
+base_path = "C:\\Users\\<Username>\\<Directory>\\<Folder>"
 
 data = []
 

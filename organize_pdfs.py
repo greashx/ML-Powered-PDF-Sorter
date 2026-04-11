@@ -8,7 +8,7 @@ from datetime import datetime
 # ==========================================
 # 1. CONFIGURATION
 # ==========================================
-SOURCE_DIR = "C:\\Users\\4mine\\Downloads"  # Change this to your actual path
+SOURCE_DIR = "C:\\Users\\<Username>\\Downloads"  # Change this to your actual path
 MODEL_PATH = "file_classifier_model.pkl" # Path to the trained model
 ENCODER_PATH = "label_encoder.pkl" # Path to the label encoder
 LOG_FILE = os.path.join(SOURCE_DIR, "classification_log.csv")

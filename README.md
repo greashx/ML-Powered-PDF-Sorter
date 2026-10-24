@@ -1,5 +1,5 @@
 
-#  AI-Powered PDF Sorter
+#  ML-Powered PDF Sorter
 
 An automated file organization system that uses **Machine Learning (Random Forest)** to classify and sort PDFs into specific folders based on their metadata and content features.
 
